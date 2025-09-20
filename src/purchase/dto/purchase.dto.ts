@@ -38,8 +38,11 @@ export class CreatePurchaseOrderDto {
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
-  @Type(() => PurchaseOrderItemDTO)
   items: PurchaseOrderItemDTO[];
+
+  @IsOptional()
+  @IsDateString()
+  orderDate?: string;
 
   @IsOptional()
   @IsString()
