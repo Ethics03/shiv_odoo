@@ -26,8 +26,6 @@ model User {
   createdSalesOrders    SalesOrder[]      @relation("CreatedBy")
   createdInvoices       CustomerInvoice[] @relation("CreatedBy")
   createdPayments       Payment[]         @relation("CreatedBy")
-
-  @@map("users")
 }
 
 enum UserRole {
