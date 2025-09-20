@@ -20,6 +20,12 @@ export class ProductsController {
     return this.productService.dropdown();
   }
 
+  @Get('all')
+  @Roles(UserRole.ADMIN, UserRole.INVOICING_USER)
+  async getAllProducts() {
+    return this.productService.getAllProducts();
+  }
+
   @Get(':id')
   @Roles(UserRole.ADMIN, UserRole.INVOICING_USER)
   async findProductById(@Param('id') id: string) {
