@@ -181,15 +181,22 @@ export class RazorpayController {
       const userRole = userProfile?.role;
 
       // Determine if this is for invoices or bills
-      const isInvoicePayment = createMultiOrderDto.invoiceIds && createMultiOrderDto.invoiceIds.length > 0;
-      const isBillPayment = createMultiOrderDto.billIds && createMultiOrderDto.billIds.length > 0;
+      const isInvoicePayment =
+        createMultiOrderDto.invoiceIds &&
+        createMultiOrderDto.invoiceIds.length > 0;
+      const isBillPayment =
+        createMultiOrderDto.billIds && createMultiOrderDto.billIds.length > 0;
 
       if (!isInvoicePayment && !isBillPayment) {
-        throw new BadRequestException('Either invoiceIds or billIds must be provided');
+        throw new BadRequestException(
+          'Either invoiceIds or billIds must be provided',
+        );
       }
 
       if (isInvoicePayment && isBillPayment) {
-        throw new BadRequestException('Cannot process both invoices and bills in the same order');
+        throw new BadRequestException(
+          'Cannot process both invoices and bills in the same order',
+        );
       }
 
       this.logger.log(
@@ -213,7 +220,7 @@ export class RazorpayController {
       }
 
       // Create the multi-payment order
-      const result = isInvoicePayment 
+      const result = isInvoicePayment
         ? await this.razorpayService.createOrderForMultipleInvoices(
             createMultiOrderDto.invoiceIds!,
             userId,
@@ -226,13 +233,25 @@ export class RazorpayController {
           );
 
       // Calculate totals
-      const totalAmount = isInvoicePayment 
-        ? (result as any).invoices.reduce((sum: number, inv: any) => sum + Number(inv.totalAmount), 0)
-        : (result as any).bills.reduce((sum: number, bill: any) => sum + Number(bill.totalAmount), 0);
-      
+      const totalAmount = isInvoicePayment
+        ? (result as any).invoices.reduce(
+            (sum: number, inv: any) => sum + Number(inv.totalAmount),
+            0,
+          )
+        : (result as any).bills.reduce(
+            (sum: number, bill: any) => sum + Number(bill.totalAmount),
+            0,
+          );
+
       const totalReceived = isInvoicePayment
-        ? (result as any).invoices.reduce((sum: number, inv: any) => sum + Number(inv.receivedAmount), 0)
-        : (result as any).bills.reduce((sum: number, bill: any) => sum + Number(bill.receivedAmount), 0);
+        ? (result as any).invoices.reduce(
+            (sum: number, inv: any) => sum + Number(inv.receivedAmount),
+            0,
+          )
+        : (result as any).bills.reduce(
+            (sum: number, bill: any) => sum + Number(bill.receivedAmount),
+            0,
+          );
 
       return {
         success: true,
@@ -243,23 +262,26 @@ export class RazorpayController {
 
           // Summary
           summary: {
-            totalItems: isInvoicePayment ? (result as any).invoices.length : (result as any).bills.length,
+            totalItems: isInvoicePayment
+              ? (result as any).invoices.length
+              : (result as any).bills.length,
             totalAmount,
             totalReceived,
             pendingAmount: totalAmount - totalReceived,
-            itemNumbers: isInvoicePayment 
+            itemNumbers: isInvoicePayment
               ? (result as any).invoices.map((inv: any) => inv.invoiceNumber)
               : (result as any).bills.map((bill: any) => bill.billNumber),
           },
 
           // Individual item details
-          items: isInvoicePayment 
+          items: isInvoicePayment
             ? (result as any).invoices.map((invoice: any) => ({
                 id: invoice.id,
                 itemNumber: invoice.invoiceNumber,
                 totalAmount: invoice.totalAmount,
                 receivedAmount: invoice.receivedAmount,
-                pendingAmount: Number(invoice.totalAmount) - Number(invoice.receivedAmount),
+                pendingAmount:
+                  Number(invoice.totalAmount) - Number(invoice.receivedAmount),
                 status: invoice.status,
                 itemDate: invoice.invoiceDate,
                 dueDate: invoice.dueDate,
@@ -269,7 +291,8 @@ export class RazorpayController {
                 itemNumber: bill.billNumber,
                 totalAmount: bill.totalAmount,
                 receivedAmount: bill.receivedAmount,
-                pendingAmount: Number(bill.totalAmount) - Number(bill.receivedAmount),
+                pendingAmount:
+                  Number(bill.totalAmount) - Number(bill.receivedAmount),
                 status: bill.status,
                 itemDate: bill.invoiceDate,
                 dueDate: bill.dueDate,
@@ -277,9 +300,13 @@ export class RazorpayController {
 
           // Contact information
           contact: {
-            name: (result as any).customer?.name || (result as any).vendor?.name,
-            email: (result as any).customer?.email || (result as any).vendor?.email,
-            mobile: (result as any).customer?.mobile || (result as any).vendor?.mobile,
+            name:
+              (result as any).customer?.name || (result as any).vendor?.name,
+            email:
+              (result as any).customer?.email || (result as any).vendor?.email,
+            mobile:
+              (result as any).customer?.mobile ||
+              (result as any).vendor?.mobile,
           },
 
           // Razorpay configuration

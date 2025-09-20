@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateTaxDTO, UpdateTaxDTO } from './dto/taxes.dto';
-import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class TaxesService {
@@ -12,9 +11,9 @@ export class TaxesService {
       let systemUser;
       try {
         systemUser = await this.prisma.user.findFirst({
-          where: { loginid: 'system' }
+          where: { loginid: 'system' },
         });
-        
+
         if (!systemUser) {
           systemUser = await this.prisma.user.create({
             data: {
@@ -22,19 +21,19 @@ export class TaxesService {
               name: 'System User',
               loginid: 'system',
               role: 'ADMIN' as any,
-              isActive: true
-            }
+              isActive: true,
+            },
           });
         }
       } catch (error) {
         // If we can't create/find a user, use a fallback approach
         console.warn('Could not create/find system user:', error);
       }
-      
+
       return this.prisma.tax.create({
-        data: { 
-          ...data, 
-          createdById: systemUser?.id || 'system-user-id'
+        data: {
+          ...data,
+          createdById: systemUser?.id || 'system-user-id',
         },
       });
     } catch (error) {

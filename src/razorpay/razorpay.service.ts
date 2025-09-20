@@ -294,7 +294,7 @@ export class RazorpayService {
 
       // Calculate total amount in paise (Razorpay expects paise)
       // Use user-entered amount if provided, otherwise calculate from invoices
-      const totalAmountInPaise = amount 
+      const totalAmountInPaise = amount
         ? Math.round(amount * 100)
         : invoices.reduce(
             (sum, inv) => sum + Math.round(Number(inv.totalAmount) * 100),
@@ -393,7 +393,7 @@ export class RazorpayService {
 
       // Calculate total amount in paise (Razorpay expects paise)
       // Use user-entered amount if provided, otherwise calculate from bills
-      const totalAmountInPaise = amount 
+      const totalAmountInPaise = amount
         ? Math.round(amount * 100)
         : bills.reduce(
             (sum, bill) => sum + Math.round(Number(bill.totalAmount) * 100),
@@ -424,9 +424,7 @@ export class RazorpayService {
         },
       });
 
-      this.logger.log(
-        `Multi-bill Razorpay order created: ${razorpayOrder.id}`,
-      );
+      this.logger.log(`Multi-bill Razorpay order created: ${razorpayOrder.id}`);
 
       // For bills, we don't store in RazorpayOrder table as it's designed for invoices
       // We'll just create the Razorpay order without database storage
@@ -450,9 +448,7 @@ export class RazorpayService {
         dbOrder,
       };
     } catch (error) {
-      this.logger.error(
-        `Failed to create multi-bill order: ${error.message}`,
-      );
+      this.logger.error(`Failed to create multi-bill order: ${error.message}`);
       throw new BadRequestException(`Failed to create order: ${error.message}`);
     }
   }
