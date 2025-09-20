@@ -36,10 +36,10 @@ export class AuthController {
 
   // ✅ Create user profile (after Supabase signup)
   @Post('createUser')
-  @UseGuards(SupabaseGuard) // ✅ Only auth guard needed
+  @UseGuards(SupabaseGuard)
   async createUser(@Body() body: CreateUserDto, @Req() req) {
     const supabaseUser = req.user;
-
+    console.log('Backend createUser called with:', { body, supabaseUser });
     try {
       // ✅ Check if user profile already exists
       const existingUser = await this.prisma.user.findUnique({
