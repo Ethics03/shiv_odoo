@@ -71,7 +71,7 @@ export class RazorpayService {
         fail_existing: 0,
       });
 
-      // ✅ Fix 2: Properly await and handle the response
+      //  Fix 2: Properly await and handle the response
       this.logger.log(`Razorpay customer created: ${rzpCustomer.id}`);
 
       // Save to database
@@ -228,13 +228,16 @@ export class RazorpayService {
       company: 'Shiv Furniture',
     };
   }
-  async createOrderForMultipleInvoices(invoiceNumbers: string[], userId: string) {
+  async createOrderForMultipleInvoices(
+    invoiceNumbers: string[],
+    userId: string,
+  ) {
     try {
       // Fetch all invoices by invoice numbers
       const invoices = await this.prisma.customerInvoice.findMany({
-        where: { 
+        where: {
           invoiceNumber: { in: invoiceNumbers },
-          status: { not: 'PAID' } // Only unpaid invoices
+          status: { not: 'PAID' }, // Only unpaid invoices
         },
         include: {
           customer: true,
@@ -247,51 +250,62 @@ export class RazorpayService {
       }
 
       // Check if any invoice already has a Razorpay order
-      const existingOrders = invoices.filter(inv => inv.razorpayOrder);
+      const existingOrders = invoices.filter((inv) => inv.razorpayOrder);
       if (existingOrders.length > 0) {
-        this.logger.log(`Found ${existingOrders.length} invoices with existing orders, cleaning up...`);
-        
+        this.logger.log(
+          `Found ${existingOrders.length} invoices with existing orders, cleaning up...`,
+        );
+
         // Clean up existing orders for these invoices
         for (const invoice of existingOrders) {
           if (invoice.razorpayOrder) {
             // Delete the existing Razorpay order record
             await this.prisma.razorpayOrder.delete({
-              where: { id: invoice.razorpayOrder.id }
+              where: { id: invoice.razorpayOrder.id },
             });
-            this.logger.log(`Cleaned up existing order for invoice ${invoice.invoiceNumber}`);
+            this.logger.log(
+              `Cleaned up existing order for invoice ${invoice.invoiceNumber}`,
+            );
           }
         }
-        
+
         // Re-fetch invoices after cleanup
         const updatedInvoices = await this.prisma.customerInvoice.findMany({
-          where: { 
+          where: {
             invoiceNumber: { in: invoiceNumbers },
-            status: { not: 'PAID' }
+            status: { not: 'PAID' },
           },
           include: {
             customer: true,
             razorpayOrder: true,
           },
         });
-        
+
         // Update the invoices array
         invoices.splice(0, invoices.length, ...updatedInvoices);
       }
 
       // Get customer (assuming all invoices belong to same customer)
       const customer = invoices[0].customer;
-      const razorpayCustomer = await this.getOrCreateRazorpayCustomer(customer.id);
+      const razorpayCustomer = await this.getOrCreateRazorpayCustomer(
+        customer.id,
+      );
 
       // Calculate total amount in paise (Razorpay expects paise)
-      const totalAmountInPaise = invoices.reduce((sum, inv) => 
-        sum + Math.round(Number(inv.totalAmount) * 100), 0
+      const totalAmountInPaise = invoices.reduce(
+        (sum, inv) => sum + Math.round(Number(inv.totalAmount) * 100),
+        0,
       );
-      
+
       this.logger.log(`Total amount calculation: ${invoices.length} invoices`);
-      invoices.forEach(inv => {
-        this.logger.log(`Invoice ${inv.invoiceNumber}: ₹${inv.totalAmount} = ${Math.round(Number(inv.totalAmount) * 100)} paise`);
+      invoices.forEach((inv) => {
+        this.logger.log(
+          `Invoice ${inv.invoiceNumber}: ₹${inv.totalAmount} = ${Math.round(Number(inv.totalAmount) * 100)} paise`,
+        );
       });
-      this.logger.log(`Total amount: ₹${totalAmountInPaise / 100} = ${totalAmountInPaise} paise`);
+      this.logger.log(
+        `Total amount: ₹${totalAmountInPaise / 100} = ${totalAmountInPaise} paise`,
+      );
 
       // Create Razorpay order
       const razorpayOrder = await this.razorpay.orders.create({
@@ -303,11 +317,13 @@ export class RazorpayService {
           invoice_numbers: invoiceNumbers.join(','),
           customer_id: customer.id,
           created_by: userId,
-          type: 'multi_invoice'
+          type: 'multi_invoice',
         },
       });
 
-      this.logger.log(`Multi-invoice Razorpay order created: ${razorpayOrder.id}`);
+      this.logger.log(
+        `Multi-invoice Razorpay order created: ${razorpayOrder.id}`,
+      );
 
       // Create database order record
       const dbOrder = await this.prisma.razorpayOrder.create({
@@ -333,7 +349,9 @@ export class RazorpayService {
         dbOrder,
       };
     } catch (error) {
-      this.logger.error(`Failed to create multi-invoice order: ${error.message}`);
+      this.logger.error(
+        `Failed to create multi-invoice order: ${error.message}`,
+      );
       throw new BadRequestException(`Failed to create order: ${error.message}`);
     }
   }
@@ -342,11 +360,15 @@ export class RazorpayService {
     orderId: string,
     paymentId: string,
     signature: string,
-    userId: string
+    userId: string,
   ) {
     try {
       // Verify payment signature
-      const isValid = this.verifyPaymentSignature(orderId, paymentId, signature);
+      const isValid = this.verifyPaymentSignature(
+        orderId,
+        paymentId,
+        signature,
+      );
       if (!isValid) {
         throw new BadRequestException('Invalid payment signature');
       }
@@ -363,23 +385,26 @@ export class RazorpayService {
 
       // Get invoice numbers from Razorpay order notes to update all invoices
       const razorpayOrderDetails = await this.razorpay.orders.fetch(orderId);
-      const invoiceNumbers = typeof razorpayOrderDetails.notes?.invoice_numbers === 'string' 
-        ? razorpayOrderDetails.notes.invoice_numbers.split(',') 
-        : [razorpayOrder.invoice.invoiceNumber];
-      
-      this.logger.log(`Updating payment for invoices: ${invoiceNumbers.join(', ')}`);
+      const invoiceNumbers =
+        typeof razorpayOrderDetails.notes?.invoice_numbers === 'string'
+          ? razorpayOrderDetails.notes.invoice_numbers.split(',')
+          : [razorpayOrder.invoice.invoiceNumber];
+
+      this.logger.log(
+        `Updating payment for invoices: ${invoiceNumbers.join(', ')}`,
+      );
 
       // Update all invoices to PAID status
       const updatedInvoices: any[] = [];
       for (const invoiceNumber of invoiceNumbers) {
         const invoice = await this.prisma.customerInvoice.findUnique({
-          where: { invoiceNumber }
+          where: { invoiceNumber },
         });
-        
+
         if (invoice) {
           const updatedInvoice = await this.prisma.customerInvoice.update({
             where: { id: invoice.id },
-            data: { 
+            data: {
               status: 'PAID',
               receivedAmount: invoice.totalAmount, // Full amount received
             },
@@ -390,8 +415,9 @@ export class RazorpayService {
       }
 
       // Calculate total amount received in rupees
-      const totalAmountReceived = updatedInvoices.reduce((sum, inv) => 
-        sum + Number(inv.totalAmount), 0
+      const totalAmountReceived = updatedInvoices.reduce(
+        (sum, inv) => sum + Number(inv.totalAmount),
+        0,
       );
 
       // Create payment record
@@ -419,17 +445,19 @@ export class RazorpayService {
         amount: payment.amount,
         status: 'completed',
         invoiceId: razorpayOrder.invoiceId,
-        updatedInvoices: updatedInvoices.map(inv => ({
+        updatedInvoices: updatedInvoices.map((inv) => ({
           id: inv.id,
           invoiceNumber: inv.invoiceNumber,
           amount: inv.totalAmount,
-          status: inv.status
+          status: inv.status,
         })),
         totalAmountReceived: totalAmountReceived,
       };
     } catch (error) {
       this.logger.error(`Payment verification failed: ${error.message}`);
-      throw new BadRequestException(`Payment verification failed: ${error.message}`);
+      throw new BadRequestException(
+        `Payment verification failed: ${error.message}`,
+      );
     }
   }
 
@@ -438,15 +466,17 @@ export class RazorpayService {
       // Find all orders that are still in 'created' status
       const abandonedOrders = await this.prisma.razorpayOrder.findMany({
         where: {
-          status: 'created'
-        }
+          status: 'created',
+        },
       });
 
-      this.logger.log(`Found ${abandonedOrders.length} abandoned orders to clean up`);
+      this.logger.log(
+        `Found ${abandonedOrders.length} abandoned orders to clean up`,
+      );
 
       for (const order of abandonedOrders) {
         await this.prisma.razorpayOrder.delete({
-          where: { id: order.id }
+          where: { id: order.id },
         });
         this.logger.log(`Cleaned up abandoned order: ${order.razorpayId}`);
       }
@@ -454,14 +484,14 @@ export class RazorpayService {
       return {
         success: true,
         message: `Cleaned up ${abandonedOrders.length} abandoned orders`,
-        cleanedCount: abandonedOrders.length
+        cleanedCount: abandonedOrders.length,
       };
     } catch (error) {
       this.logger.error(`Failed to cleanup abandoned orders: ${error.message}`);
       return {
         success: false,
         message: 'Failed to cleanup abandoned orders',
-        error: error.message
+        error: error.message,
       };
     }
   }

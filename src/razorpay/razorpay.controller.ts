@@ -10,7 +10,12 @@ import {
 } from '@nestjs/common';
 import { RazorpayService } from './razorpay.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateOrderDto, CustomerDTO, CreateMultiOrderDto, VerifyPaymentDto } from './dto/razor.dto';
+import {
+  CreateOrderDto,
+  CustomerDTO,
+  CreateMultiOrderDto,
+  VerifyPaymentDto,
+} from './dto/razor.dto';
 import { Roles } from 'src/auth/roles.decorator';
 import { SupabaseGuard } from 'src/auth/guards/auth.guard';
 
@@ -71,12 +76,12 @@ export class RazorpayController {
     try {
       const userId = req.user.sub;
       const userEmail = req.user.email;
-      
+
       // Get user profile from database
       const userProfile = await this.prisma.user.findUnique({
-        where: { email: userEmail }
+        where: { email: userEmail },
       });
-      
+
       const userRole = userProfile?.role;
 
       this.logger.log(
@@ -160,16 +165,19 @@ export class RazorpayController {
 
   @Post('create-multi-order')
   @Roles('ADMIN', 'INVOICING_USER', 'CONTACT_USER')
-  async createMultiPaymentOrder(@Body() createMultiOrderDto: CreateMultiOrderDto, @Req() req) {
+  async createMultiPaymentOrder(
+    @Body() createMultiOrderDto: CreateMultiOrderDto,
+    @Req() req,
+  ) {
     try {
       const userId = req.user.sub;
       const userEmail = req.user.email;
-      
+
       // Get user profile from database
       const userProfile = await this.prisma.user.findUnique({
-        where: { email: userEmail }
+        where: { email: userEmail },
       });
-      
+
       const userRole = userProfile?.role;
 
       this.logger.log(
@@ -199,11 +207,13 @@ export class RazorpayController {
       );
 
       // Calculate totals
-      const totalAmount = result.invoices.reduce((sum, inv) => 
-        sum + Number(inv.totalAmount), 0
+      const totalAmount = result.invoices.reduce(
+        (sum, inv) => sum + Number(inv.totalAmount),
+        0,
       );
-      const totalReceived = result.invoices.reduce((sum, inv) => 
-        sum + Number(inv.receivedAmount), 0
+      const totalReceived = result.invoices.reduce(
+        (sum, inv) => sum + Number(inv.receivedAmount),
+        0,
       );
 
       return {
@@ -212,23 +222,24 @@ export class RazorpayController {
         data: {
           // Razorpay order details
           order: result.order,
-          
+
           // Invoice summary
           invoiceSummary: {
             totalInvoices: result.invoices.length,
             totalAmount,
             totalReceived,
             pendingAmount: totalAmount - totalReceived,
-            invoiceNumbers: result.invoices.map(inv => inv.invoiceNumber),
+            invoiceNumbers: result.invoices.map((inv) => inv.invoiceNumber),
           },
 
           // Individual invoice details
-          invoices: result.invoices.map(invoice => ({
+          invoices: result.invoices.map((invoice) => ({
             id: invoice.id,
             invoiceNumber: invoice.invoiceNumber,
             totalAmount: invoice.totalAmount,
             receivedAmount: invoice.receivedAmount,
-            pendingAmount: Number(invoice.totalAmount) - Number(invoice.receivedAmount),
+            pendingAmount:
+              Number(invoice.totalAmount) - Number(invoice.receivedAmount),
             status: invoice.status,
             invoiceDate: invoice.invoiceDate,
             dueDate: invoice.dueDate,
@@ -246,7 +257,9 @@ export class RazorpayController {
         },
       };
     } catch (error) {
-      this.logger.error(`Failed to create multi-invoice payment order: ${error.message}`);
+      this.logger.error(
+        `Failed to create multi-invoice payment order: ${error.message}`,
+      );
       throw new BadRequestException(error.message);
     }
   }
@@ -256,13 +269,13 @@ export class RazorpayController {
   async verifyPayment(@Body() verifyPaymentDto: VerifyPaymentDto, @Req() req) {
     try {
       const userId = req.user.sub;
-      
+
       // Verify payment and update invoice
       const result = await this.razorpayService.verifyPaymentAndUpdateInvoice(
         verifyPaymentDto.razorpay_order_id,
         verifyPaymentDto.razorpay_payment_id,
         verifyPaymentDto.razorpay_signature,
-        userId
+        userId,
       );
 
       return {
@@ -281,7 +294,7 @@ export class RazorpayController {
   async cleanupAbandonedOrders(@Req() req) {
     try {
       const result = await this.razorpayService.cleanupAbandonedOrders();
-      
+
       return {
         success: true,
         message: 'Cleanup completed',
