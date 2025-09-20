@@ -17,10 +17,14 @@ import { PaymentsModule } from './payments/payments.module';
 import { ChartOaService } from './chart-oa/chart-oa.service';
 import { ChartOaController } from './chart-oa/chart-oa.controller';
 import { ChartOaModule } from './chart-oa/chart-oa.module';
+import { LedgerService } from './ledger/ledger.service';
+import { LedgerController } from './ledger/ledger.controller';
+import { ReportsService } from './reports/reports.service';
+import { ReportsController } from './reports/reports.controller';
 
 @Module({
   imports: [PrismaModule, AuthModule, ConfigModule.forRoot({ isGlobal: true }), ContactsModule, ProductsModule, TaxesModule, PurchaseModule, SalesModule, PaymentsModule, ChartOaModule],
-  controllers: [AppController, RazorpayController, ChartOaController],
-  providers: [AppService, PrismaService, AuthService, RazorpayService, ChartOaService],
+  controllers: [AppController, RazorpayController, ChartOaController, LedgerController, ReportsController],
+  providers: [AppService, PrismaService, AuthService, RazorpayService, ChartOaService, LedgerService, ReportsService],
 })
 export class AppModule {}

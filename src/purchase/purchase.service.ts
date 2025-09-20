@@ -20,9 +20,9 @@ export class PurchaseService {
       return await this.prisma.$transaction(async (tx) => {
         // Ensure user exists, create system user if needed
         let systemUser = await tx.user.findUnique({
-          where: { id: actualUserId }
+          where: { id: actualUserId },
         });
-        
+
         if (!systemUser) {
           systemUser = await tx.user.create({
             data: {
@@ -30,8 +30,8 @@ export class PurchaseService {
               email: 'system@example.com',
               name: 'System User',
               loginid: `system-${Date.now()}`,
-              role: 'ADMIN'
-            }
+              role: 'ADMIN',
+            },
           });
         }
         // Validate vendor exists
@@ -76,7 +76,9 @@ export class PurchaseService {
           data: {
             orderNumber,
             vendorId: createPurchaseOrderDto.vendorId,
-            orderDate: createPurchaseOrderDto.orderDate ? new Date(createPurchaseOrderDto.orderDate) : new Date(),
+            orderDate: createPurchaseOrderDto.orderDate
+              ? new Date(createPurchaseOrderDto.orderDate)
+              : new Date(),
             totalAmount: new Prisma.Decimal(totalAmount),
             taxAmount: new Prisma.Decimal(taxAmount),
             status: 'DRAFT',
@@ -198,7 +200,9 @@ export class PurchaseService {
           billNumber: `BILL-${Date.now()}`,
           purchaseOrderId: po.id,
           vendorId: po.vendorId,
-          invoiceDate: billData.invoiceDate ? new Date(billData.invoiceDate) : new Date(),
+          invoiceDate: billData.invoiceDate
+            ? new Date(billData.invoiceDate)
+            : new Date(),
           dueDate: new Date(billData.dueDate),
           totalAmount: po.totalAmount,
           taxAmount: po.taxAmount,
