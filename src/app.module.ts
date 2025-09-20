@@ -13,14 +13,14 @@ import { ContactsController } from './contacts/contacts.controller';
 import { ContactsModule } from './contacts/contacts.module';
 import { ProductsService } from './products/products.service';
 import { ProductsModule } from './products/products.module';
-import { TaxesService } from './taxes/taxes.service';
+
 import { TaxesController } from './taxes/taxes.controller';
-import { TexesModule } from './texes/texes.module';
+
 import { TaxesModule } from './taxes/taxes.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, ConfigModule.forRoot({ isGlobal: true }), ContactsModule, ProductsModule, TexesModule, TaxesModule],
+  imports: [PrismaModule, AuthModule, ConfigModule.forRoot({ isGlobal: true }), ContactsModule, ProductsModule, TaxesModule],
   controllers: [AppController, RazorpayController, ContactsController, TaxesController],
-  providers: [AppService, PrismaService, AuthService, RazorpayService, ContactsService, ProductsService, TaxesService],
+  providers: [AppService, PrismaService, AuthService, RazorpayService, ContactsService, ProductsService],
 })
 export class AppModule {}

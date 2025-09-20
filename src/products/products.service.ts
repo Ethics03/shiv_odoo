@@ -19,16 +19,20 @@ export class ProductsService {
 
   async createProduct(payload: CreateProductDTO, createdById: string) {
     try {
+      this.logger.log(`Creating product: ${payload.name} by user ${createdById}`);
+      
       const existingProduct = await this.prisma.product.findFirst({
         where: {
           name: payload.name,
-          isActive: true,
         },
       });
 
       if (existingProduct) {
+        this.logger.warn(`Product already exists: ${payload.name}`);
         throw new BadRequestException('Product by this name already exists');
       }
+      
+      this.logger.log('Creating product in database...');
       const product = await this.prisma.product.create({
         data: {
           ...payload,
@@ -41,8 +45,9 @@ export class ProductsService {
           },
         },
       });
+      
       this.logger.log(
-        `Product created: ${product.name} by user ${createdById}`,
+        `Product created successfully: ${product.name} with ID ${product.id}`,
       );
 
       return {
@@ -51,15 +56,17 @@ export class ProductsService {
         message: 'Product created successfully',
       };
     } catch (error) {
+      this.logger.error('Error creating product:', error);
       if (error instanceof BadRequestException) {
         throw error;
       }
+      throw new BadRequestException('Failed to create product: ' + error.message);
     }
   }
 
   async getAllProducts(filters?: ProductFilterDto) {
     try {
-      const where: any = { isActive: true }; // Default: only active products
+      const where: any = {}; // No isActive filter since we're doing hard deletes
 
       // Simple filters
       if (filters?.type) where.type = filters.type;
@@ -79,7 +86,8 @@ export class ProductsService {
         count: products.length,
       };
     } catch (error) {
-      throw new BadRequestException('Failed to get products');
+      this.logger.error('Error getting products:', error);
+      throw new BadRequestException('Failed to get products: ' + error.message);
     }
   }
 
@@ -108,12 +116,36 @@ export class ProductsService {
 
   async removeProduct(id: string) {
     try {
-      return await this.prisma.product.update({
+      this.logger.log(`Attempting to delete product with ID: ${id}`);
+      
+      // First check if the product exists
+      const existingProduct = await this.prisma.product.findUnique({
         where: { id },
-        data: { isActive: false },
       });
-    } catch {
-      throw new NotFoundException('Product not found');
+
+      if (!existingProduct) {
+        this.logger.warn(`Product not found for deletion: ${id}`);
+        throw new NotFoundException('Product not found');
+      }
+
+      this.logger.log(`Product found, proceeding with deletion: ${existingProduct.name}`);
+      
+      const result = await this.prisma.product.delete({
+        where: { id },
+      });
+      
+      this.logger.log(`Product deleted successfully: ${result.name}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Error deleting product ${id}:`, error);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      // Handle foreign key constraint errors
+      if (error.code === 'P2003') {
+        throw new BadRequestException('Cannot delete product: it is referenced by other records');
+      }
+      throw new BadRequestException('Failed to delete product: ' + error.message);
     }
   }
 
@@ -135,7 +167,6 @@ export class ProductsService {
 
   async dropdown() {
     return this.prisma.product.findMany({
-      where: { isActive: true },
       select: {
         id: true,
         name: true,
