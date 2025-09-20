@@ -1,8 +1,22 @@
-import { Body, Controller, Get, Post, Req, Param, Put, Delete, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Req,
+  Param,
+  Put,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { ContactsService } from './contacts.service';
 import { UserRole } from '@prisma/client';
 import { Roles } from 'src/auth/roles.decorator';
-import { CreateContactDTO, UpdateContactDTO, ContactFilterDto } from './dto/contacts.dto';
+import {
+  CreateContactDTO,
+  UpdateContactDTO,
+  ContactFilterDto,
+} from './dto/contacts.dto';
 
 @Controller('contacts')
 export class ContactsController {
@@ -22,10 +36,10 @@ export class ContactsController {
       const userId = req.id || 'cmfs5sdfu0000ox9ezz6cjemu';
       console.log('Controller received contact data:', data);
       console.log('Using user ID:', userId);
-      
+
       const result = await this.contactsService.createContact(data, userId);
       console.log('Service returned:', result);
-      
+
       return result;
     } catch (error) {
       console.error('Controller error:', error);
