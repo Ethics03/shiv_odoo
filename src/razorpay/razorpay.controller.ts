@@ -6,13 +6,16 @@ import {
   Logger,
   Post,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { RazorpayService } from './razorpay.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateOrderDto, CustomerDTO } from './dto/razor.dto';
+import { CreateOrderDto, CustomerDTO, CreateMultiOrderDto, VerifyPaymentDto } from './dto/razor.dto';
 import { Roles } from 'src/auth/roles.decorator';
+import { SupabaseGuard } from 'src/auth/guards/auth.guard';
 
 @Controller('razorpay')
+@UseGuards(SupabaseGuard)
 export class RazorpayController {
   logger = new Logger(RazorpayController.name);
   constructor(
@@ -66,9 +69,15 @@ export class RazorpayController {
   @Roles('ADMIN', 'INVOICING_USER', 'CONTACT_USER')
   async createPaymentOrder(@Body() createOrderDto: CreateOrderDto, @Req() req) {
     try {
-      const userId = req.userProfile?.id || req.user.sub;
-      const userRole = req.userProfile?.role;
+      const userId = req.user.sub;
       const userEmail = req.user.email;
+      
+      // Get user profile from database
+      const userProfile = await this.prisma.user.findUnique({
+        where: { email: userEmail }
+      });
+      
+      const userRole = userProfile?.role;
 
       this.logger.log(
         `User ${userEmail} (${userRole}) creating order for invoice ${createOrderDto.invoiceId}`,
@@ -145,6 +154,141 @@ export class RazorpayController {
       };
     } catch (error) {
       this.logger.error(`Failed to create payment order: ${error.message}`);
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  @Post('create-multi-order')
+  @Roles('ADMIN', 'INVOICING_USER', 'CONTACT_USER')
+  async createMultiPaymentOrder(@Body() createMultiOrderDto: CreateMultiOrderDto, @Req() req) {
+    try {
+      const userId = req.user.sub;
+      const userEmail = req.user.email;
+      
+      // Get user profile from database
+      const userProfile = await this.prisma.user.findUnique({
+        where: { email: userEmail }
+      });
+      
+      const userRole = userProfile?.role;
+
+      this.logger.log(
+        `User ${userEmail} (${userRole}) creating multi-invoice order for ${createMultiOrderDto.invoiceIds.length} invoices`,
+      );
+
+      // Security check: CONTACT_USER can only pay their own invoices
+      if (userRole === 'CONTACT_USER') {
+        const invoices = await this.prisma.customerInvoice.findMany({
+          where: { invoiceNumber: { in: createMultiOrderDto.invoiceIds } },
+          include: { customer: true },
+        });
+
+        for (const invoice of invoices) {
+          if (invoice.customer.email !== userEmail) {
+            throw new BadRequestException(
+              'You can only create payment orders for your own invoices',
+            );
+          }
+        }
+      }
+
+      // Create the multi-invoice payment order
+      const result = await this.razorpayService.createOrderForMultipleInvoices(
+        createMultiOrderDto.invoiceIds,
+        userId,
+      );
+
+      // Calculate totals
+      const totalAmount = result.invoices.reduce((sum, inv) => 
+        sum + Number(inv.totalAmount), 0
+      );
+      const totalReceived = result.invoices.reduce((sum, inv) => 
+        sum + Number(inv.receivedAmount), 0
+      );
+
+      return {
+        success: true,
+        message: 'Multi-invoice payment order created successfully',
+        data: {
+          // Razorpay order details
+          order: result.order,
+          
+          // Invoice summary
+          invoiceSummary: {
+            totalInvoices: result.invoices.length,
+            totalAmount,
+            totalReceived,
+            pendingAmount: totalAmount - totalReceived,
+            invoiceNumbers: result.invoices.map(inv => inv.invoiceNumber),
+          },
+
+          // Individual invoice details
+          invoices: result.invoices.map(invoice => ({
+            id: invoice.id,
+            invoiceNumber: invoice.invoiceNumber,
+            totalAmount: invoice.totalAmount,
+            receivedAmount: invoice.receivedAmount,
+            pendingAmount: Number(invoice.totalAmount) - Number(invoice.receivedAmount),
+            status: invoice.status,
+            invoiceDate: invoice.invoiceDate,
+            dueDate: invoice.dueDate,
+          })),
+
+          // Customer information
+          customer: {
+            name: result.customer.name,
+            email: result.customer.email,
+            mobile: result.customer.mobile,
+          },
+
+          // Razorpay configuration
+          razorpay_key: this.razorpayService.getRazorpayConfig().key,
+        },
+      };
+    } catch (error) {
+      this.logger.error(`Failed to create multi-invoice payment order: ${error.message}`);
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  @Post('verify-payment')
+  @Roles('ADMIN', 'INVOICING_USER', 'CONTACT_USER')
+  async verifyPayment(@Body() verifyPaymentDto: VerifyPaymentDto, @Req() req) {
+    try {
+      const userId = req.user.sub;
+      
+      // Verify payment and update invoice
+      const result = await this.razorpayService.verifyPaymentAndUpdateInvoice(
+        verifyPaymentDto.razorpay_order_id,
+        verifyPaymentDto.razorpay_payment_id,
+        verifyPaymentDto.razorpay_signature,
+        userId
+      );
+
+      return {
+        success: true,
+        message: 'Payment verified and processed successfully',
+        data: result,
+      };
+    } catch (error) {
+      this.logger.error(`Payment verification failed: ${error.message}`);
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  @Post('cleanup-orders')
+  @Roles('ADMIN', 'INVOICING_USER')
+  async cleanupAbandonedOrders(@Req() req) {
+    try {
+      const result = await this.razorpayService.cleanupAbandonedOrders();
+      
+      return {
+        success: true,
+        message: 'Cleanup completed',
+        data: result,
+      };
+    } catch (error) {
+      this.logger.error(`Cleanup failed: ${error.message}`);
       throw new BadRequestException(error.message);
     }
   }
