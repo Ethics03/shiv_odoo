@@ -6,10 +6,12 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthService } from './auth/auth.service';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
+import { RazorpayService } from './razorpay/razorpay.service';
+import { RazorpayController } from './razorpay/razorpay.controller';
 
 @Module({
   imports: [PrismaModule, AuthModule, ConfigModule.forRoot({ isGlobal: true })],
-  controllers: [AppController],
-  providers: [AppService, PrismaService, AuthService],
+  controllers: [AppController, RazorpayController],
+  providers: [AppService, PrismaService, AuthService, RazorpayService],
 })
 export class AppModule {}
