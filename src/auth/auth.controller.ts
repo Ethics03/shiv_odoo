@@ -4,6 +4,7 @@ import {
   ConflictException,
   Controller,
   Get,
+  Logger,
   Post,
   Req,
   UseGuards,
@@ -17,6 +18,7 @@ import { UserRole } from '@prisma/client';
 
 @Controller('auth')
 export class AuthController {
+  logger = new Logger(AuthController.name);
   constructor(private readonly prisma: PrismaService) {}
 
   @Get('test')
@@ -45,6 +47,7 @@ export class AuthController {
       });
 
       if (existingUser) {
+        this.logger.log('User already exists');
         return {
           success: true,
           data: existingUser,
@@ -60,6 +63,7 @@ export class AuthController {
           loginid: body.loginid,
         },
       });
+      this.logger.log('User created!');
 
       const { ...userResponse } = user;
       return {
@@ -75,7 +79,6 @@ export class AuthController {
     }
   }
 
-  // ✅ Additional test routes for different roles
   @Get('admin-test')
   @UseGuards(SupabaseGuard, RolesGuard)
   async adminTest() {
@@ -83,7 +86,7 @@ export class AuthController {
   }
 
   @Get('profile')
-  @UseGuards(SupabaseGuard) // ✅ Any authenticated user can access
+  @UseGuards(SupabaseGuard)
   async getProfile(@Req() req) {
     const supabaseUser = req.user;
 
