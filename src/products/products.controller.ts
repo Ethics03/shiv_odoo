@@ -52,7 +52,7 @@ export class ProductsController {
   }
 
   @Delete(':id')
-  // @Roles(UserRole.ADMIN, UserRole.INVOICING_USER)
+  @Roles(UserRole.ADMIN, UserRole.INVOICING_USER)
   async deleteProduct(@Param('id') id: string) {
     return this.productService.removeProduct(id);
   }

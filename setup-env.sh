@@ -49,3 +49,4 @@ echo "🚀 Running database migrations..."
 npx prisma migrate deploy
 
 echo "🎉 Setup complete! You can now start the backend with: npm run start:dev"
+
