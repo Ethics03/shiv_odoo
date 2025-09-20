@@ -52,18 +52,16 @@ export class AuthController {
         };
       }
 
-      // ✅ Create new user profile
       const user = await this.prisma.user.create({
         data: {
           email: supabaseUser.email,
+          role: body.role,
           name: body.name,
-          role: body.role || UserRole.CONTACT_USER,
-          username: body.username,
+          loginid: body.loginid,
         },
       });
 
-      // ✅ Don't return password
-      const { password, ...userResponse } = user;
+      const { ...userResponse } = user;
       return {
         success: true,
         data: userResponse,
@@ -80,7 +78,6 @@ export class AuthController {
   // ✅ Additional test routes for different roles
   @Get('admin-test')
   @UseGuards(SupabaseGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   async adminTest() {
     return { message: 'Admin only route accessed!' };
   }
