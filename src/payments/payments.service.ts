@@ -1,7 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreatePaymentDto, UpdatePaymentDto, PaymentFilterDto } from './dto/payments.dto';
-import { PaymentType, PaymentMethod, BillStatus, InvoiceStatus, Prisma } from 'generated/prisma';
+import {
+  CreatePaymentDto,
+  UpdatePaymentDto,
+  PaymentFilterDto,
+} from './dto/payments.dto';
+import {
+  PaymentType,
+  PaymentMethod,
+  BillStatus,
+  InvoiceStatus,
+  Prisma,
+} from 'generated/prisma';
 
 @Injectable()
 export class PaymentsService {
@@ -9,23 +19,23 @@ export class PaymentsService {
 
   async createPayment(data: CreatePaymentDto, userId: string) {
     const paymentNumber = await this.generatePaymentNumber();
-    
+
     // Validate that the contact exists
     const contact = await this.prisma.contact.findUnique({
-      where: { id: data.contactId }
+      where: { id: data.contactId },
     });
-    
+
     if (!contact) {
       throw new NotFoundException('Contact not found');
     }
 
     // For now, skip account validation and use a default account ID
     const accountId = 'default-cash-account';
-    
+
     // Create a default account if it doesn't exist
     try {
       await this.prisma.chartOfAccount.findUniqueOrThrow({
-        where: { id: accountId }
+        where: { id: accountId },
       });
     } catch {
       // Create default account
@@ -36,17 +46,17 @@ export class PaymentsService {
           code: 'CASH-DEFAULT',
           type: 'ASSET',
           isActive: true,
-          createdById: userId
-        }
+          createdById: userId,
+        },
       });
     }
 
     // If it's a vendor bill payment, validate the bill
     if (data.vendorBillId) {
       const bill = await this.prisma.vendorBill.findUnique({
-        where: { id: data.vendorBillId }
+        where: { id: data.vendorBillId },
       });
-      
+
       if (!bill) {
         throw new NotFoundException('Vendor bill not found');
       }
@@ -55,9 +65,9 @@ export class PaymentsService {
     // If it's a customer invoice payment, validate the invoice
     if (data.customerInvoiceId) {
       const invoice = await this.prisma.customerInvoice.findUnique({
-        where: { id: data.customerInvoiceId }
+        where: { id: data.customerInvoiceId },
       });
-      
+
       if (!invoice) {
         throw new NotFoundException('Customer invoice not found');
       }
@@ -76,14 +86,14 @@ export class PaymentsService {
         accountId: accountId,
         reference: data.reference,
         notes: data.notes,
-        createdById: userId
+        createdById: userId,
       },
       include: {
         contact: true,
         account: true,
         vendorBill: true,
-        customerInvoice: true
-      }
+        customerInvoice: true,
+      },
     });
 
     // Update bill/invoice status if applicable
@@ -104,8 +114,10 @@ export class PaymentsService {
     if (filters.search) {
       where.OR = [
         { paymentNumber: { contains: filters.search, mode: 'insensitive' } },
-        { contact: { name: { contains: filters.search, mode: 'insensitive' } } },
-        { reference: { contains: filters.search, mode: 'insensitive' } }
+        {
+          contact: { name: { contains: filters.search, mode: 'insensitive' } },
+        },
+        { reference: { contains: filters.search, mode: 'insensitive' } },
       ];
     }
 
@@ -131,9 +143,9 @@ export class PaymentsService {
         contact: true,
         account: true,
         vendorBill: true,
-        customerInvoice: true
+        customerInvoice: true,
       },
-      orderBy: { paymentDate: 'desc' }
+      orderBy: { paymentDate: 'desc' },
     });
   }
 
@@ -144,8 +156,8 @@ export class PaymentsService {
         contact: true,
         account: true,
         vendorBill: true,
-        customerInvoice: true
-      }
+        customerInvoice: true,
+      },
     });
 
     if (!payment) {
@@ -157,7 +169,7 @@ export class PaymentsService {
 
   async updatePayment(id: string, data: UpdatePaymentDto) {
     const payment = await this.findPaymentById(id);
-    
+
     if (payment.status === 'completed') {
       throw new Error('Cannot update completed payment');
     }
@@ -166,20 +178,20 @@ export class PaymentsService {
       where: { id },
       data: {
         ...data,
-        paymentDate: data.paymentDate ? new Date(data.paymentDate) : undefined
+        paymentDate: data.paymentDate ? new Date(data.paymentDate) : undefined,
       },
       include: {
         contact: true,
         account: true,
         vendorBill: true,
-        customerInvoice: true
-      }
+        customerInvoice: true,
+      },
     });
   }
 
   async deletePayment(id: string) {
     const payment = await this.findPaymentById(id);
-    
+
     if (payment.status === 'completed') {
       throw new Error('Cannot delete completed payment');
     }
@@ -194,47 +206,50 @@ export class PaymentsService {
     }
 
     return this.prisma.payment.delete({
-      where: { id }
+      where: { id },
     });
   }
 
   async getOutstandingBills() {
     return this.prisma.vendorBill.findMany({
       where: {
-        status: { in: [BillStatus.UNPAID, BillStatus.PARTIALLY_PAID] }
+        status: { in: [BillStatus.UNPAID, BillStatus.PARTIALLY_PAID] },
       },
       include: {
         vendor: true,
         purchaseOrder: true,
-        payments: true
+        payments: true,
       },
-      orderBy: { dueDate: 'asc' }
+      orderBy: { dueDate: 'asc' },
     });
   }
 
   async getOutstandingInvoices() {
     return this.prisma.customerInvoice.findMany({
       where: {
-        status: { in: [InvoiceStatus.UNPAID, InvoiceStatus.PARTIALLY_PAID] }
+        status: { in: [InvoiceStatus.UNPAID, InvoiceStatus.PARTIALLY_PAID] },
       },
       include: {
         customer: true,
         salesOrder: true,
-        payments: true
+        payments: true,
       },
-      orderBy: { dueDate: 'asc' }
+      orderBy: { dueDate: 'asc' },
     });
   }
 
   private async updateBillStatus(billId: string) {
     const bill = await this.prisma.vendorBill.findUnique({
       where: { id: billId },
-      include: { payments: true }
+      include: { payments: true },
     });
 
     if (!bill) return;
 
-    const totalPaid = bill.payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
+    const totalPaid = bill.payments.reduce(
+      (sum, payment) => sum + Number(payment.amount),
+      0,
+    );
     const totalAmount = Number(bill.totalAmount);
 
     let status: BillStatus;
@@ -253,22 +268,25 @@ export class PaymentsService {
 
     await this.prisma.vendorBill.update({
       where: { id: billId },
-      data: { 
+      data: {
         status,
-        paidAmount: totalPaid
-      }
+        paidAmount: totalPaid,
+      },
     });
   }
 
   private async updateInvoiceStatus(invoiceId: string) {
     const invoice = await this.prisma.customerInvoice.findUnique({
       where: { id: invoiceId },
-      include: { payments: true }
+      include: { payments: true },
     });
 
     if (!invoice) return;
 
-    const totalReceived = invoice.payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
+    const totalReceived = invoice.payments.reduce(
+      (sum, payment) => sum + Number(payment.amount),
+      0,
+    );
     const totalAmount = Number(invoice.totalAmount);
 
     let status: InvoiceStatus;
@@ -287,10 +305,10 @@ export class PaymentsService {
 
     await this.prisma.customerInvoice.update({
       where: { id: invoiceId },
-      data: { 
+      data: {
         status,
-        receivedAmount: totalReceived
-      }
+        receivedAmount: totalReceived,
+      },
     });
   }
 
@@ -299,17 +317,17 @@ export class PaymentsService {
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
-    
+
     const dateStr = `${year}${month}${day}`;
-    
+
     // Find the last payment number for today
     const lastPayment = await this.prisma.payment.findFirst({
       where: {
         paymentNumber: {
-          startsWith: `PAY-${dateStr}`
-        }
+          startsWith: `PAY-${dateStr}`,
+        },
       },
-      orderBy: { paymentNumber: 'desc' }
+      orderBy: { paymentNumber: 'desc' },
     });
 
     let sequence = 1;

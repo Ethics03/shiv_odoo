@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsString, IsArray, IsNumber, IsOptional } from '@nestjs/class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsArray,
+  IsNumber,
+  IsOptional,
+} from '@nestjs/class-validator';
 
 export class CustomerDTO {
   @IsString()
