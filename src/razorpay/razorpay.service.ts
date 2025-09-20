@@ -231,6 +231,7 @@ export class RazorpayService {
   async createOrderForMultipleInvoices(
     invoiceNumbers: string[],
     userId: string,
+    amount?: number,
   ) {
     try {
       // Fetch all invoices by invoice numbers
@@ -292,10 +293,13 @@ export class RazorpayService {
       );
 
       // Calculate total amount in paise (Razorpay expects paise)
-      const totalAmountInPaise = invoices.reduce(
-        (sum, inv) => sum + Math.round(Number(inv.totalAmount) * 100),
-        0,
-      );
+      // Use user-entered amount if provided, otherwise calculate from invoices
+      const totalAmountInPaise = amount 
+        ? Math.round(amount * 100)
+        : invoices.reduce(
+            (sum, inv) => sum + Math.round(Number(inv.totalAmount) * 100),
+            0,
+          );
 
       this.logger.log(`Total amount calculation: ${invoices.length} invoices`);
       invoices.forEach((inv) => {
@@ -351,6 +355,103 @@ export class RazorpayService {
     } catch (error) {
       this.logger.error(
         `Failed to create multi-invoice order: ${error.message}`,
+      );
+      throw new BadRequestException(`Failed to create order: ${error.message}`);
+    }
+  }
+
+  async createOrderForMultipleBills(
+    billIds: string[],
+    userId: string,
+    amount?: number,
+  ) {
+    try {
+      // Fetch all bills by IDs
+      const bills = await this.prisma.vendorBill.findMany({
+        where: {
+          id: { in: billIds },
+          status: { not: 'PAID' }, // Only unpaid bills
+        },
+        include: {
+          vendor: true,
+        },
+      });
+
+      if (bills.length === 0) {
+        throw new BadRequestException('No valid bills found');
+      }
+
+      // For bills, we don't need to check for existing Razorpay orders
+      // as the RazorpayOrder table is primarily for invoices
+      // We can proceed directly with bill processing
+
+      // Get vendor (assuming all bills belong to same vendor)
+      const vendor = bills[0].vendor;
+      const razorpayCustomer = await this.getOrCreateRazorpayCustomer(
+        vendor.id,
+      );
+
+      // Calculate total amount in paise (Razorpay expects paise)
+      // Use user-entered amount if provided, otherwise calculate from bills
+      const totalAmountInPaise = amount 
+        ? Math.round(amount * 100)
+        : bills.reduce(
+            (sum, bill) => sum + Math.round(Number(bill.totalAmount) * 100),
+            0,
+          );
+
+      this.logger.log(`Total amount calculation: ${bills.length} bills`);
+      bills.forEach((bill) => {
+        this.logger.log(
+          `Bill ${bill.billNumber}: ₹${bill.totalAmount} = ${Math.round(Number(bill.totalAmount) * 100)} paise`,
+        );
+      });
+      this.logger.log(
+        `Total amount: ₹${totalAmountInPaise / 100} = ${totalAmountInPaise} paise`,
+      );
+
+      // Create Razorpay order
+      const razorpayOrder = await this.razorpay.orders.create({
+        amount: totalAmountInPaise,
+        currency: 'INR',
+        receipt: `multi_bill_${Date.now()}`,
+        payment_capture: true,
+        notes: {
+          bill_ids: billIds.join(','),
+          vendor_id: vendor.id,
+          created_by: userId,
+          type: 'multi_bill',
+        },
+      });
+
+      this.logger.log(
+        `Multi-bill Razorpay order created: ${razorpayOrder.id}`,
+      );
+
+      // For bills, we don't store in RazorpayOrder table as it's designed for invoices
+      // We'll just create the Razorpay order without database storage
+      const dbOrder = {
+        id: 'bill-order-' + razorpayOrder.id,
+        razorpayId: razorpayOrder.id,
+        amount: totalAmountInPaise,
+        status: razorpayOrder.status,
+      };
+
+      return {
+        success: true,
+        order: {
+          id: razorpayOrder.id,
+          amount: razorpayOrder.amount,
+          currency: razorpayOrder.currency,
+          receipt: razorpayOrder.receipt,
+        },
+        bills,
+        vendor,
+        dbOrder,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to create multi-bill order: ${error.message}`,
       );
       throw new BadRequestException(`Failed to create order: ${error.message}`);
     }

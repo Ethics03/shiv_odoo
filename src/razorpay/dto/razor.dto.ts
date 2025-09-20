@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsArray } from '@nestjs/class-validator';
+import { IsNotEmpty, IsString, IsArray, IsNumber, IsOptional } from '@nestjs/class-validator';
 
 export class CustomerDTO {
   @IsString()
@@ -20,8 +20,15 @@ export class CreateOrderDto {
 export class CreateMultiOrderDto {
   @IsArray()
   @IsString({ each: true })
-  @IsNotEmpty({ each: true })
-  invoiceIds: string[]; // Note: These are actually invoice numbers, not IDs
+  invoiceIds?: string[]; // Note: These are actually invoice numbers, not IDs
+
+  @IsArray()
+  @IsString({ each: true })
+  billIds?: string[]; // Bill IDs for bill payments
+
+  @IsNumber()
+  @IsOptional()
+  amount?: number; // User-entered payment amount
 }
 
 export class VerifyPaymentDto {

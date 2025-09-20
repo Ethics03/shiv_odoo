@@ -11,9 +11,12 @@ import { RazorpayController } from './razorpay/razorpay.controller';
 import { ContactsModule } from './contacts/contacts.module';
 import { ProductsModule } from './products/products.module';
 import { TaxesModule } from './taxes/taxes.module';
+import { PurchaseModule } from './purchase/purchase.module';
+import { SalesModule } from './sales/sales.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, ConfigModule.forRoot({ isGlobal: true }), ContactsModule, ProductsModule, TaxesModule],
+  imports: [PrismaModule, AuthModule, ConfigModule.forRoot({ isGlobal: true }), ContactsModule, ProductsModule, TaxesModule, PurchaseModule, SalesModule, PaymentsModule],
   controllers: [AppController, RazorpayController],
   providers: [AppService, PrismaService, AuthService, RazorpayService],
 })
