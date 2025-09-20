@@ -16,6 +16,7 @@ model User {
   role      UserRole @default(CONTACT_USER)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   createdContacts       Contact[]         @relation("CreatedBy")
   createdProducts       Product[]         @relation("CreatedBy")
