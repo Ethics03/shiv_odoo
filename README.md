@@ -1,98 +1,314 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🏢 TriNetra ERP System
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+[![YouTube Demo](https://img.shields.io/badge/YouTube-Demo-red?style=for-the-badge&logo=youtube)](https://www.youtube.com/watch?v=RFZ_9XQMKsw)
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+A comprehensive Enterprise Resource Planning (ERP) system built with **NestJS** and **PostgreSQL**, designed specifically for furniture businesses. This system provides end-to-end business management capabilities including inventory, sales, purchases, payments, and financial reporting.
 
-## Description
+## 🚀 Features Overview
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### 📋 **Core Modules**
 
-## Project setup
+#### 👥 **Contact Management**
+- **Customer & Vendor Management**: Complete contact database with detailed information
+- **Contact Types**: Support for CUSTOMER, VENDOR, or BOTH classifications
+- **Advanced Filtering**: Search by name, email, mobile, city, state
+- **Profile Management**: Store addresses, contact details, and profile images
+- **Razorpay Integration**: Automatic customer creation for payment processing
 
-```bash
-$ pnpm install
+#### 📦 **Product Management**
+- **Product Catalog**: Comprehensive product database with goods and services
+- **Pricing Management**: Separate sales and purchase pricing
+- **Tax Configuration**: Individual tax rates for sales and purchases
+- **Inventory Tracking**: Real-time stock level monitoring
+- **HSN Code Support**: Tax compliance with HSN/SAC codes
+- **Category Management**: Organize products by categories
+
+#### 💰 **Sales Management**
+- **Sales Orders**: Create and manage customer orders
+- **Invoice Generation**: Convert sales orders to professional invoices
+- **Order Status Tracking**: DRAFT → CONFIRMED → COMPLETED → CANCELLED
+- **Tax Calculations**: Automatic tax computation on line items
+- **Customer Integration**: Seamless customer data integration
+
+#### 🛒 **Purchase Management**
+- **Purchase Orders**: Create and track vendor orders
+- **Vendor Bills**: Convert purchase orders to bills
+- **Bill Status Tracking**: UNPAID → PARTIALLY_PAID → PAID → OVERDUE
+- **Vendor Integration**: Complete vendor management system
+- **Order-to-Bill Workflow**: Streamlined procurement process
+
+#### 💳 **Payment Processing**
+- **Multi-Payment Methods**: Cash, Razorpay, Bank Transfer
+- **Payment Types**: Received (from customers) and Paid (to vendors)
+- **Outstanding Tracking**: Monitor unpaid bills and invoices
+- **Payment History**: Complete payment audit trail
+- **Razorpay Integration**: Secure online payment processing
+
+#### 📊 **Financial Management**
+- **Chart of Accounts**: Complete accounting structure
+- **Account Types**: Assets, Liabilities, Expenses, Income, Equity
+- **Hierarchical Structure**: Parent-child account relationships
+- **Balance Tracking**: Real-time account balance monitoring
+- **Balance Sheet Validation**: Ensure accounting equation balance
+
+#### 📈 **Reporting & Analytics**
+- **PDF Report Generation**: Professional business reports
+- **Invoice PDFs**: Branded customer invoices
+- **Purchase Order PDFs**: Vendor purchase orders
+- **Profit & Loss Reports**: Comprehensive P&L statements
+- **Balance Sheet Reports**: Financial position reports
+- **Date Range Filtering**: Customizable report periods
+
+#### 🔐 **Authentication & Authorization**
+- **Role-Based Access**: ADMIN, INVOICING_USER, CONTACT_USER roles
+- **Supabase Integration**: Secure authentication system
+- **API Security**: Protected endpoints with role-based permissions
+- **User Management**: Complete user profile management
+
+### 🛠 **Technical Features**
+
+#### 🏗 **Architecture**
+- **NestJS Framework**: Scalable, modular Node.js framework
+- **PostgreSQL Database**: Robust relational database with Prisma ORM
+- **TypeScript**: Type-safe development environment
+- **Modular Design**: Clean separation of concerns
+
+#### 🔌 **Integrations**
+- **Razorpay Payment Gateway**: Secure online payment processing
+- **PDF Generation**: Professional document creation with PDFKit
+- **Swagger Documentation**: Interactive API documentation
+- **CORS Support**: Cross-origin resource sharing enabled
+
+#### 📱 **API Features**
+- **RESTful APIs**: Well-structured REST endpoints
+- **Data Validation**: Comprehensive input validation with class-validator
+- **Error Handling**: Robust error handling and logging
+- **Response Formatting**: Consistent API response structure
+
+## 🛠 **Technology Stack**
+
+### **Backend**
+- **Framework**: NestJS 11.x
+- **Language**: TypeScript 5.x
+- **Database**: PostgreSQL
+- **ORM**: Prisma 6.x
+- **Authentication**: Supabase
+- **Payment Gateway**: Razorpay
+- **PDF Generation**: PDFKit
+
+### **Development Tools**
+- **Package Manager**: pnpm
+- **Linting**: ESLint with Prettier
+- **Testing**: Jest
+- **API Documentation**: Swagger/OpenAPI
+- **Database Migrations**: Prisma Migrate
+
+## 🚀 **Getting Started**
+
+### **Prerequisites**
+- Node.js (v18 or higher)
+- PostgreSQL database
+- pnpm package manager
+
+### **Installation**
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd shiv_odoo
+   ```
+
+2. **Install dependencies**
+   ```bash
+   pnpm install
+   ```
+
+3. **Environment Setup**
+   ```bash
+   # Copy environment template
+   cp .env.example .env
+   
+   # Configure your environment variables
+   DATABASE_URL="postgresql://username:password@localhost:5432/shiv_odoo"
+   RAZORPAY_KEY_ID="your_razorpay_key_id"
+   RAZORPAY_KEY_SECRET="your_razorpay_key_secret"
+   ```
+
+4. **Database Setup**
+   ```bash
+   # Generate Prisma client
+   pnpm prisma generate
+   
+   # Run database migrations
+   pnpm prisma migrate dev
+   
+   # Seed the database (optional)
+   pnpm prisma db seed
+   ```
+
+5. **Start the application**
+   ```bash
+   # Development mode
+   pnpm run start:dev
+   
+   # Production mode
+   pnpm run build
+   pnpm run start:prod
+   ```
+
+### **API Documentation**
+Once the application is running, visit:
+- **API Documentation**: `http://localhost:3001/api`
+- **Health Check**: `http://localhost:3001/`
+
+## 📚 **API Endpoints**
+
+### **Authentication**
+- `POST /auth/login` - User authentication
+- `POST /auth/register` - User registration
+- `GET /auth/profile` - Get user profile
+
+### **Contacts**
+- `GET /contacts` - List all contacts
+- `POST /contacts/create` - Create new contact
+- `GET /contacts/:id` - Get contact by ID
+- `PUT /contacts/:id` - Update contact
+- `DELETE /contacts/:id` - Delete contact
+
+### **Products**
+- `GET /products` - List all products
+- `POST /products/create` - Create new product
+- `GET /products/:id` - Get product by ID
+- `PUT /products/:id` - Update product
+- `DELETE /products/:id` - Delete product
+
+### **Sales**
+- `GET /sales/orders` - List sales orders
+- `POST /sales/orders` - Create sales order
+- `GET /sales/invoices` - List customer invoices
+- `POST /sales/invoices` - Create customer invoice
+- `PUT /sales/orders/:id/status` - Update order status
+
+### **Purchase**
+- `GET /purchase` - List purchase orders
+- `POST /purchase` - Create purchase order
+- `PUT /purchase/:id/status` - Update order status
+- `POST /purchase/:id/convert-to-bill` - Convert to vendor bill
+
+### **Payments**
+- `GET /payments` - List all payments
+- `POST /payments` - Create payment
+- `GET /payments/outstanding/bills` - Get outstanding bills
+- `GET /payments/outstanding/invoices` - Get outstanding invoices
+
+### **Reports**
+- `GET /reports/invoice/:invoiceNumber` - Generate invoice PDF
+- `GET /reports/purchase-order/:id` - Generate purchase order PDF
+- `GET /reports/profit-loss` - Generate P&L report
+- `GET /reports/balance-sheet` - Generate balance sheet
+
+### **Razorpay Integration**
+- `POST /razorpay/create-order` - Create payment order
+- `POST /razorpay/verify-payment` - Verify payment
+- `GET /razorpay/config` - Get Razorpay configuration
+
+## 🗄 **Database Schema**
+
+The system uses a comprehensive PostgreSQL schema with the following main entities:
+
+- **Users**: System users with role-based access
+- **Contacts**: Customers and vendors
+- **Products**: Product catalog with pricing and inventory
+- **Sales Orders & Invoices**: Sales management
+- **Purchase Orders & Bills**: Purchase management
+- **Payments**: Payment tracking and processing
+- **Chart of Accounts**: Financial account structure
+- **Taxes**: Tax configuration and management
+
+## 🔧 **Configuration**
+
+### **Environment Variables**
+```env
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/shiv_odoo"
+
+# Razorpay
+RAZORPAY_KEY_ID="your_razorpay_key_id"
+RAZORPAY_KEY_SECRET="your_razorpay_key_secret"
+
+# Application
+PORT=3001
+NODE_ENV=development
 ```
 
-## Compile and run the project
+### **Database Configuration**
+The system uses Prisma for database management. Key configuration files:
+- `prisma/schema.prisma` - Database schema definition
+- `prisma/migrations/` - Database migration files
+
+## 🧪 **Testing**
 
 ```bash
-# development
-$ pnpm run start
+# Unit tests
+pnpm run test
 
-# watch mode
-$ pnpm run start:dev
+# E2E tests
+pnpm run test:e2e
 
-# production mode
-$ pnpm run start:prod
+# Test coverage
+pnpm run test:cov
 ```
 
-## Run tests
+## 📦 **Deployment**
 
+### **Production Build**
 ```bash
-# unit tests
-$ pnpm run test
+# Build the application
+pnpm run build
 
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+# Start production server
+pnpm run start:prod
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+### **Docker Deployment**
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+# Build Docker image
+docker build -t shiv-odoo .
+
+# Run container
+docker run -p 3001:3001 shiv-odoo
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 🤝 **Contributing**
 
-## Resources
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-Check out a few resources that may come in handy when working with NestJS:
+## 📄 **License**
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+This project is licensed under the UNLICENSED License - see the package.json file for details.
 
-## Support
+## 🆘 **Support**
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+For support and questions:
+- Create an issue in the repository
+- Contact the development team
+- Check the API documentation at `/api` endpoint
 
-## Stay in touch
+## 🎯 **Roadmap**
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- [ ] Mobile application
+- [ ] Advanced reporting dashboard
+- [ ] Multi-currency support
+- [ ] Advanced inventory management
+- [ ] CRM integration
+- [ ] Advanced analytics and insights
 
-## License
+---
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+**Built with ❤️ for SHIV Furniture**
+
+*This ERP system is designed to streamline furniture business operations and provide comprehensive business management capabilities.*
