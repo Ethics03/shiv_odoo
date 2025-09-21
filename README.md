@@ -2,6 +2,8 @@
 
 [![YouTube Demo](https://img.shields.io/badge/YouTube-Demo-red?style=for-the-badge&logo=youtube)](https://www.youtube.com/watch?v=RFZ_9XQMKsw)
 
+https://www.youtube.com/watch?v=RFZ_9XQMKsw
+
 A comprehensive Enterprise Resource Planning (ERP) system built with **NestJS** and **PostgreSQL**, designed specifically for furniture businesses. This system provides end-to-end business management capabilities including inventory, sales, purchases, payments, and financial reporting.
 
 ## 🚀 Features Overview
