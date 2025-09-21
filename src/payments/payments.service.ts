@@ -270,8 +270,8 @@ export class PaymentsService {
       where: { id: billId },
       data: {
         status,
-        paidAmount: totalPaid,
-      },
+        paidAmount: totalPaid
+      }
     });
   }
 
@@ -307,8 +307,8 @@ export class PaymentsService {
       where: { id: invoiceId },
       data: {
         status,
-        receivedAmount: totalReceived,
-      },
+        receivedAmount: totalReceived
+      }
     });
   }
 

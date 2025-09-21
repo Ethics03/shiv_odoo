@@ -1,6 +1,7 @@
 import {
   IsBoolean,
   IsEnum,
+  IsNumber,
   IsOptional,
   IsString,
 } from '@nestjs/class-validator';
@@ -19,6 +20,10 @@ export class CreateChartAccountDto {
   @IsOptional()
   @IsString()
   parentId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  openingBalance?: number;
 }
 
 export class UpdateChartAccountDto {
@@ -28,7 +33,19 @@ export class UpdateChartAccountDto {
 
   @IsOptional()
   @IsString()
+  code?: string;
+
+  @IsOptional()
+  @IsEnum(AccountType)
+  type?: AccountType;
+
+  @IsOptional()
+  @IsString()
   parentId?: string;
+
+  @IsOptional()
+  @IsNumber()
+  openingBalance?: number;
 
   @IsOptional()
   @IsBoolean()

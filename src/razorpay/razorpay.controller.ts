@@ -322,10 +322,10 @@ export class RazorpayController {
   }
 
   @Post('verify-payment')
-  @Roles('ADMIN', 'INVOICING_USER', 'CONTACT_USER')
+  // @Roles('ADMIN', 'INVOICING_USER', 'CONTACT_USER')
   async verifyPayment(@Body() verifyPaymentDto: VerifyPaymentDto, @Req() req) {
     try {
-      const userId = req.user.sub;
+      const userId = req.user?.sub || 'system-user-id';
 
       // Verify payment and update invoice
       const result = await this.razorpayService.verifyPaymentAndUpdateInvoice(

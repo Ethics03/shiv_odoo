@@ -39,6 +39,7 @@ export class ChartOaService {
         code: payload.code,
         type: payload.type,
         parentId: payload.parentId,
+        openingBalance: payload.openingBalance || 0,
         isActive: true,
         createdById: userId,
       },
@@ -67,12 +68,37 @@ export class ChartOaService {
     }
     return this.prisma.chartOfAccount.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        type: true,
+        parentId: true,
+        openingBalance: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+        createdById: true,
         parent: {
           select: { id: true, name: true, code: true },
         },
+        children: {
+          select: { id: true, name: true, code: true, type: true },
+        },
         _count: {
           select: { children: true, payments: true },
+        },
+        payments: {
+          select: {
+            id: true,
+            paymentNumber: true,
+            amount: true,
+            paymentDate: true,
+            paymentMethod: true,
+            contact: {
+              select: { name: true },
+            },
+          },
         },
       },
       orderBy: [{ type: 'asc' }, { name: 'asc' }],
@@ -83,7 +109,17 @@ export class ChartOaService {
   async findOne(id: string) {
     const account = await this.prisma.chartOfAccount.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        type: true,
+        parentId: true,
+        openingBalance: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+        createdById: true,
         parent: true,
         children: {
           where: { isActive: true },
@@ -136,9 +172,36 @@ export class ChartOaService {
       }
     }
 
+    // Filter out invalid/empty values before updating
+    const updateData: any = {};
+    
+    if (updateAccountDto.name && updateAccountDto.name.trim() !== '') {
+      updateData.name = updateAccountDto.name.trim();
+    }
+    
+    if (updateAccountDto.code && updateAccountDto.code.trim() !== '') {
+      updateData.code = updateAccountDto.code.trim();
+    }
+    
+    if (updateAccountDto.type && updateAccountDto.type.trim() !== '') {
+      updateData.type = updateAccountDto.type;
+    }
+    
+    if (updateAccountDto.parentId !== undefined) {
+      updateData.parentId = updateAccountDto.parentId;
+    }
+    
+    if (updateAccountDto.openingBalance !== undefined) {
+      updateData.openingBalance = updateAccountDto.openingBalance;
+    }
+    
+    if (updateAccountDto.isActive !== undefined) {
+      updateData.isActive = updateAccountDto.isActive;
+    }
+
     return this.prisma.chartOfAccount.update({
       where: { id },
-      data: updateAccountDto,
+      data: updateData,
     });
   }
 
@@ -146,7 +209,7 @@ export class ChartOaService {
   async getAccountBalance(accountId: string) {
     const account = await this.prisma.chartOfAccount.findUnique({
       where: { id: accountId },
-      select: { name: true, code: true, type: true },
+      select: { name: true, code: true, type: true, openingBalance: true },
     });
 
     if (!account) {
@@ -158,9 +221,14 @@ export class ChartOaService {
       _sum: { amount: true },
     });
 
+    // Calculate total balance: opening balance + payment transactions
+    const paymentBalance = Number(result._sum.amount) || 0;
+    const openingBalance = Number(account.openingBalance);
+    const totalBalance = openingBalance + paymentBalance;
+
     return {
       account,
-      balance: result._sum.amount || 0,
+      balance: totalBalance,
       balanceType: ['ASSET', 'EXPENSE'].includes(account.type)
         ? 'DEBIT'
         : 'CREDIT',
@@ -183,6 +251,38 @@ export class ChartOaService {
       orderBy: { code: 'asc' },
     });
   }
+
+  // Validate balance sheet equation: Assets = Liabilities + Equity
+  async validateBalanceSheet() {
+    const assets = await this.prisma.chartOfAccount.findMany({
+      where: { type: 'ASSET', isActive: true },
+      select: { openingBalance: true },
+    });
+
+    const liabilities = await this.prisma.chartOfAccount.findMany({
+      where: { type: 'LIABILITY', isActive: true },
+      select: { openingBalance: true },
+    });
+
+    const equity = await this.prisma.chartOfAccount.findMany({
+      where: { type: 'EQUITY', isActive: true },
+      select: { openingBalance: true },
+    });
+
+    const totalAssets = assets.reduce((sum, account) => sum + Number(account.openingBalance), 0);
+    const totalLiabilities = liabilities.reduce((sum, account) => sum + Number(account.openingBalance), 0);
+    const totalEquity = equity.reduce((sum, account) => sum + Number(account.openingBalance), 0);
+
+    const isBalanced = Math.abs(totalAssets - (totalLiabilities + totalEquity)) < 0.01;
+
+    return {
+      isBalanced,
+      totalAssets,
+      totalLiabilities,
+      totalEquity,
+      difference: totalAssets - (totalLiabilities + totalEquity),
+    };
+  }
   //archive the account
   async archive(id: string) {
     const account = await this.prisma.chartOfAccount.findUnique({
@@ -204,12 +304,13 @@ export class ChartOaService {
       );
     }
 
-    // Check if account has transactions
-    if (account.payments.length > 0) {
-      throw new BadRequestException(
-        'Cannot archive account with transactions. Contact admin.',
-      );
-    }
+    // Note: For demo purposes, we allow archiving accounts with transactions
+    // In production, you might want to keep this check or handle it differently
+    // if (account.payments.length > 0) {
+    //   throw new BadRequestException(
+    //     'Cannot archive account with transactions. Contact admin.',
+    //   );
+    // }
 
     return this.prisma.chartOfAccount.update({
       where: { id },

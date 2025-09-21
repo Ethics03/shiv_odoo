@@ -6,9 +6,9 @@ import { Response } from 'express';
 export class ReportsController {
   constructor(private readonly pdfService: ReportsService) {}
 
-  @Get('invoice/:id')
-  async generateInvoicePDF(@Param('id') id: string, @Res() res: Response) {
-    return this.pdfService.generateInvoicePDF(id, res);
+  @Get('invoice/:invoiceNumber')
+  async generateInvoicePDF(@Param('invoiceNumber') invoiceNumber: string, @Res() res: Response) {
+    return this.pdfService.generateInvoicePDF(invoiceNumber, res);
   }
 
   @Get('purchase-order/:id')

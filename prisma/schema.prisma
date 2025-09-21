@@ -89,19 +89,20 @@ model Tax {
 }
 
 model ChartOfAccount {
-  id          String           @id @default(cuid())
-  name        String
-  code        String           @unique
-  type        AccountType
-  parentId    String?
-  isActive    Boolean          @default(true)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  createdById String
-  createdBy   User             @relation("CreatedBy", fields: [createdById], references: [id])
-  parent      ChartOfAccount?  @relation("ParentChild", fields: [parentId], references: [id])
-  children    ChartOfAccount[] @relation("ParentChild")
-  payments    Payment[]        @relation("AccountPayments")
+  id             String           @id @default(cuid())
+  name           String
+  code           String           @unique
+  type           AccountType
+  parentId       String?
+  openingBalance Decimal          @default(0) @db.Decimal(12, 2)
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  createdById    String
+  createdBy      User             @relation("CreatedBy", fields: [createdById], references: [id])
+  parent         ChartOfAccount?  @relation("ParentChild", fields: [parentId], references: [id])
+  children       ChartOfAccount[] @relation("ParentChild")
+  payments       Payment[]        @relation("AccountPayments")
 }
 
 model PurchaseOrder {

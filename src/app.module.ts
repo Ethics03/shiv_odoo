@@ -21,9 +21,10 @@ import { LedgerService } from './ledger/ledger.service';
 import { LedgerController } from './ledger/ledger.controller';
 import { ReportsService } from './reports/reports.service';
 import { ReportsController } from './reports/reports.controller';
+import { CustomerDashboardModule } from './customer-dashboard/customer-dashboard.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, ConfigModule.forRoot({ isGlobal: true }), ContactsModule, ProductsModule, TaxesModule, PurchaseModule, SalesModule, PaymentsModule, ChartOaModule],
+  imports: [PrismaModule, AuthModule, ConfigModule.forRoot({ isGlobal: true }), ContactsModule, ProductsModule, TaxesModule, PurchaseModule, SalesModule, PaymentsModule, ChartOaModule, CustomerDashboardModule],
   controllers: [AppController, RazorpayController, ChartOaController, LedgerController, ReportsController],
   providers: [AppService, PrismaService, AuthService, RazorpayService, ChartOaService, LedgerService, ReportsService],
 })
